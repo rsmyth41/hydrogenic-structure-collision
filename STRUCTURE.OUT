@@ -1,0 +1,19 @@
+  
+ -----CONFIGURATIONS & ENERGIES-----
+ Atomic number of ion Z =  1
+ n   l    Energy
+  2   1       -0.1250000
+  2   0       -0.1249990
+  
+ -----NUMERICAL GRID-----
+ Number of grid points:  9600
+ Grid step size:   4.9999998882412910E-003
+  
+ -----TRANSITION CALCULATIONS-----
+ Radiation wavelength:   449087064.57115096     
+ Line strength:   54.000058264254946     
+ Transition rate:   2.0133469348139817E-007
+ Oscillator strength:   1.8262410424396223E-005
+
+ Functions u(r) written to "RADIAL1.DAT" & "RADIAL2.DAT".
+
