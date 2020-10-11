@@ -21,10 +21,9 @@
     real*8, allocatable :: radial1(:), radial2(:)               !radial range for collision calculation
 
 
-!!!! ADD E2 EXPRESSIONS FOR A VALUES FROM NIST PAPER !!!!!
-!!!! E2 LINE STRENGTH EXPRESSION IS DIFFERENT - CONTAINS POWER OF 2 TERM !!!!
-!!!! USE THE VALUES OF 3j SYMBOLS FROM symbol_3j CODE TO DETERMINE THE REDUCED MATRIX ELEMENTS !!!!
-!!!! POSSIBLY TRY LOOPING OVER ALL n and l up to approx 10h !!!!
+!!!! TODO: ADD E2 EXPRESSIONS FOR A VALUES FROM NIST PAPER !!!!!
+!!!! TODO: USE THE VALUES OF 3j SYMBOLS FROM symbol_3j CODE TO DETERMINE THE REDUCED MATRIX ELEMENTS !!!!
+!!!! TODO: LOOP OVER ALL n AND l UP TO APPROX 10h !!!!
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!! DATA INPUT for nl configs !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -33,76 +32,90 @@
     print *, 'Enter the values of (n1 l1) of first configuration'
 100 continue
     read *, pn1, l1
-    if(l1>pn1 .or. l1==pn1 .or. l1<0.0) then
+    if (l1 > pn1 .or. l1 == pn1 .or. l1 < 0.0) then
         print *, 'Error, check the configuration input'
         print *, 'Enter the values of (n1 l1) of first configuration'
         goto 100
     end if
-    Ein1=-0.001
+    Ein1 = -0.001
 
-    print*, 'Enter the values of (n2 l2) of second configuration'
+    print *, 'Enter the values of (n2 l2) of second configuration'
 101 continue
     read *, pn2, l2
-    if(l2>pn2 .or. l2==pn2 .or. l2<0.0) then
+    if (l2 > pn2 .or. l2 == pn2 .or. l2 < 0.0) then
         print *, 'Error, check the configuration input'
         print *, 'Enter the values of (n2 l2) of first configuration'
         goto 101
     end if
-    Ein2=-0.001
+    Ein2 = -0.001
 
     print *, 'Enter the value of Z'
     read *, Z
 
     !! Calculates MAXIMUM r for both nl configs !!
-    rmax1=((3.0*pn1*pn1-l1*(l1+1.0)))*4.0/Z
-    rmax2=((3.0*pn2*pn2-l2*(l2+1.0)))*4.0/Z
+    rmax1 = ((3.0 * pn1 * pn1 - l1 * (l1 + 1.0))) * 4.0 / Z
+    rmax2 = ((3.0 * pn2 * pn2 - l2 * (l2 + 1.0))) * 4.0 / Z
 
     !! Calculates the number of nodes each nl config should have !!
-    nodes1=pn1-1-l1
-    nodes2=pn2-1-l2
+    nodes1 = pn1 - 1 - l1
+    nodes2 = pn2 - 1 - l2
 
-    h=0.005  !! Stepsize for calculations
+    h = 0.005  !! Stepsize for calculations
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! FIRST CONFIGURATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    N1=real(rmax1/h)
+    N1 = real(rmax1 / h)
     print *, N1
-    E=Ein1
+    E = Ein1
 
-    allocate(r(0:N1))
-    allocate(v(0:N1))
-    allocate(a1(0:N1))
-    allocate(u1(0:N1))
-    allocate(u2(0:N1))
-    allocate(ut(0:N1))
+    allocate(r(0: N1))
+    allocate(v(0: N1))
+    allocate(a1(0: N1))
+    allocate(u1(0: N1))
+    allocate(u2(0: N1))
+    allocate(ut(0: N1))
 
-    do i=1, N1
-        r(i)=real(i,8)*h
-        v(i)=(-1.0*Z)/r(i)
+    do i = 1, N1
+        r(i) = real(i, 8) * h
+        v(i) = (-1.0 * Z) / r(i)
     end do
     print *, ' '
 
-    v(0)=-100000000.0            ! Large close the origin
-    r(0)=0.0                     ! Initial position
-    u1(0)=0.0  			         ! Zero at the origin
-    u1(1)=0.000001               ! Very small close to the origin
-    u2(N1)=0.0                    ! Zero at infinity
-    u2(N1-1)=0.0000001            ! Small far from the origin
-    a1(0)=100000000.0
+    ! Large close the origin
+    v(0) = -100000000.0
 
-2   continue ! Returns from the node section of the code
+    ! Initial position
+    r(0) = 0.0
+
+    ! Zero at the origin
+    u1(0) = 0.0
+
+    ! Very small close to the origin
+    u1(1) = 0.000001
+
+    ! Zero at infinity
+    u2(N1) = 0.0
+
+    ! Small far from the origin
+    u2(N1 - 1) = 0.0000001
+    
+    ! Very large close to the origin
+    a1(0) = 100000000.0
+
+    ! Here we return from the node section of the code
+2   continue 
 
     !! Calculates ARRAY ELEMENTS of a !!
-    do i=1, N1
-        a1(i)=2.0*(E-v(i)) - (l1*(l1+1.0))/(r(i)*r(i))
+    do i = 1, N1
+        a1(i) = 2.0 * (E - v(i)) - (l1 * (l1 + 1.0)) / (r(i) * r(i))
     end do
 
     !! Calculates INFLECTION POINT from LHS !!
     call inflection(a1, N1, inflex1)
-    if(inflex1==-1 .or. inflex1==N1) then
-        E=E*10.0
+    if (inflex1 == -1 .or. inflex1 == N1) then
+        E = E * 10.0
         goto 2
     end if
 
@@ -113,42 +126,48 @@
     call scalevector(N1, inflex1, u1, u2)
 
     !! COUNTS NODES in our plot and SHIFTS INITITAL ENERGY !!
-    nodecount=0
-    do i=0, inflex1
-        if(u1(i)*u1(i+1)<0) then
-            nodecount=nodecount+1
+    nodecount = 0
+    do i = 0, inflex1
+        if (u1(i) * u1(i + 1) < 0) then
+            nodecount = nodecount + 1
         end if
     end do
-    do i=N1-1, inflex1, -1
-        if(u2(i)*u2(i+1)<0) then
-            nodecount=nodecount+1
+
+    do i = N1 - 1, inflex1, -1
+        if (u2(i) * u2(i + 1) < 0) then
+            nodecount = nodecount + 1
         end if
     end do
-    if(nodecount==nodes1) then
+
+    if (nodecount == nodes1) then
         goto 3
     end if
-    if(nodecount/=nodes1 .and. nodecount>nodes1) then
-        E=E*1.1
-    else if(nodecount/=nodes1 .and. nodecount<nodes1) then
-        E=E*0.9
+
+    if(nodecount /= nodes1 .and. nodecount > nodes1) then
+        E = E * 1.1
+    elseif (nodecount /= nodes1 .and. nodecount < nodes1) then
+        E = E * 0.9
     end if
+
     goto 2
+
 3   continue
 
     !! CALCULATING GRADIENTS and MODIFYING ENERGY !!
     call grad(inflex1, N1, u1, u2, r, flag, grad11, grad12)
-    if(flag==0) then
-        sum1=0.0
-        sum2=0.0
-        do i=0, inflex1
-            sum1=sum1 + 0.5*h*((u1(i)**2) + (u1(i+1)**2))
+
+    if (flag == 0) then
+        sum1 = 0.0
+        sum2 = 0.0
+        do i = 0, inflex1
+            sum1 = sum1 + 0.5 * h * ((u1(i) ** 2) + (u1(i + 1) ** 2))
         end do
-        do i=inflex1, N1-1
-            sum2=sum2 + 0.5*h*((u2(i)**2) + (u2(i+1)**2))
+        do i = inflex1, N1 - 1
+            sum2 = sum2 + 0.5 * h * ((u2(i) ** 2) + (u2(i + 1) ** 2))
         end do
-        sum1=sum1+sum2
-        E=E+((grad11-grad12)*u1(inflex1))/(2*sum1)                !! Approx from Atomic structure theory text !!
-        !print *, E
+        sum1 = sum1 + sum2
+        !! Approx from Atomic structure theory text !!
+        E = E + ((grad11 - grad12) * u1(inflex1)) / (2 * sum1)
         goto 2
     end if
 
@@ -156,8 +175,9 @@
     call normtotal(inflex1, N1, h, u1, u2, ut)
 
     print *, 'Inflection point is at', r(inflex1)
-    print 1000, 'Energy of n=', pn1, 'l=', l1, 'config is', E   !! Energy output in Ryd rel to lowest !!
-    E1=E
+    !! Energy output in Ryd rel to lowest !!
+    print 1000, 'Energy of n =', pn1, 'l =', l1, 'config is', E
+    E1 = E
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! SECOND CONFIGURATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
