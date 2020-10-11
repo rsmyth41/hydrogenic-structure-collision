@@ -14,7 +14,6 @@
     integer :: i, inflex1, inflex2                               ! Integer counter and inflection point array position
     integer :: nodes1, nodes2, nodecount, flag, nodecountflag    ! Number of nodes a plot should have and the number it actually has
     real*8 :: grad11, grad22, grad12, grad21                     ! Gradients from inward and outward integrations about inflex point
-    real*8 :: sum1, sum2                                         ! Summations used for modifying energy
     real*8 :: linesum, linestrength, Ediff, wavelen
     real*8 :: A21, f12, g1, g2, temp
     integer*8 :: inflexflag, traflag
@@ -243,13 +242,13 @@
     if(pn1>pn2) then                    !! Assigning stat weights based on the order they were entered above !!
         g2=(2.0)*(2.0*l1+1.0)           !! These commands ensure that data can be entered in any order !!
         g1=(2.0)*(2.0*l2+1.0)           !! Upper level denoted by g2, lower denoted by g1 !!
-    else if(pn2>pn1) then
+    else if(pn1<pn2) then
         g2=(2.0)*(2.0*l2+1.0)
         g1=(2.0)*(2.0*l1+1.0)
     else if(pn1==pn2 .and. l2>l1) then
         g2=(2.0)*(2.0*l2+1.0)
         g1=(2.0)*(2.0*l1+1.0)
-    else if(pn1==pn2 .and.l1>l2) then
+    else if(pn1==pn2 .and.l2<l1) then
         g2=(2.0)*(2.0*l1+1.0)
         g1=(2.0)*(2.0*l2+1.0)
     end if
