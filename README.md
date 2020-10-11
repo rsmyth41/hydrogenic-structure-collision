@@ -1,6 +1,6 @@
 # Hydrogenic structure and electron impact excitation
 
-## Project overivew
+## Project overview
 This is a project which models the atomic structure of an arbirary single electron atom or ion and describes the electron-impact excitation of that model for any incident electron energy. It works for any reasonable arbitrary central potential. However, a Colulomb potential is the default and is currently the only potential which is coded into the project. 
 
 The `structure.f95` part of the project calculates the energy levels (in Rydbergs) and radial functions (using the Numerov numerical method for second order differential equations) for two arbitrary gross structure levels, for any given (`n`, `l`) pair. It also calculates electric dipole (E1) radiative transition data (radiative transition rates, line strengths, oscillator strengths) between those states (where the trapezoidal rule is used for single integrations when necessary) and prints the data for the user. The calculated radial atomic orbitals are also written to files for use in the collision part of this project. 
