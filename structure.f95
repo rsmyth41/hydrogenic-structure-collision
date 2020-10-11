@@ -1,4 +1,5 @@
     program atom
+    use subroutinesMod
     implicit none
 
     integer :: N1, N2, N, Ncol                                   ! Number of grid steps
@@ -10,14 +11,14 @@
     real*8 :: pn1, pn2, l1, l2, Z                                ! Quantum numbers of 1st, 2nd configs and atomic number
     real*8 :: rmax1, rmax2, rmax                                 ! Max radius of 1st and 2nd configs and the max radius used throughout
     real*8 :: Ein1, Ein2, E1, E2, E, h                           ! Energy (in Hartree atomic units: m=hbar=q=1, c=137) and grid step spacing
-    integer*8 :: i, inflex1, inflex2                             ! Integer counter and inflection point array position
-    integer*8 :: nodes1, nodes2, nodecount, flag                 ! Number of nodes a plot should have and the number it actually has
+    integer :: i, inflex1, inflex2                             ! Integer counter and inflection point array position
+    integer :: nodes1, nodes2, nodecount, flag                 ! Number of nodes a plot should have and the number it actually has
     real*8 :: grad11, grad22, grad12, grad21                     ! Gradients from inward and outward integrations about inflex point
     real*8 :: sum1, sum2                                         ! Summations used for modifying energy
     real*8 :: linesum, linestrength, Ediff, wavelen
     real*8 :: A21, f12, g1, g2, temp
     integer*8 :: inflexflag, traflag
-    real*8, allocatable :: radial1(:), radial2(:) !radial range for collision calculation
+    real*8, allocatable :: radial1(:), radial2(:)               !radial range for collision calculation
 
 
 !!!! ADD E2 EXPRESSIONS FOR A VALUES FROM NIST PAPER !!!!!
@@ -408,106 +409,3 @@
 1005 format(1x, a, i2)
 
     end program atom
-
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! SUBROUTINES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    subroutine inflection(a, N, inflex)
-    real*8, intent(in) :: a(0:N)
-    integer, intent(in) :: N
-    integer*8, intent(out) :: inflex
-    do i=N-1, 0, -1
-        if(a(i)*a(i+1)==0.0) then
-            inflex=i
-            goto 1
-        end if
-        if(a(i)*a(i+1)<0.0) then
-            inflex=i
-            goto 1
-        end if
-    end do
-    inflex=-1                    !! Condition in case point of inflection cannot be determined due to low E !!
-1   continue
-    end subroutine inflection
-
-
-    subroutine numerov(h, inflex, N, a, u1, u2)
-    integer*8, intent(in) :: inflex
-    integer, intent(in) :: N
-    real*8, intent(in) :: h, a(0:N)
-    real*8, intent(inout) :: u1(0:N), u2(0:N)
-    real*8 :: c1, c2
-    integer*8 :: j
-    c1=5.0*(h*h/6.0)
-    c2=h*h/12.0
-    do i=1, inflex+1                       ! Forward integration
-        u1(i+1)=((2.0-c1*a(i))*u1(i)-(1.0+c2*a(i-1))*u1(i-1))/(1.0+c2*a(i+1))
-    end do
-    do i=N, inflex-1, -1                    ! Backwards integration
-        u2(i-2)=((2.0-c1*a(i-1))*u2(i-1)-(1.0+c2*a(i))*u2(i))/(1.0+c2*a(i-2))
-    end do
-    end subroutine numerov
-
-
-    subroutine scalevector(N, inflex, u1, u2)
-    integer*8, intent(in) :: inflex
-    integer, intent(in) :: N
-    real*8, intent(in) :: u1(0:N)
-    real*8, intent(inout) :: u2(0:N)
-    real*8 :: scale, x, y
-    x=u1(inflex)
-    y=u2(inflex)
-    if(y==0) then
-        y=1.0E-37
-    end if
-    scale=x/y
-    do i=N, inflex-2, -1
-        u2(i)=u2(i)*scale
-    end do
-    end subroutine scalevector
-
-
-    subroutine grad(inflex, N, u1, u2, r, flag, grad1, grad2) !! bg.txt
-    integer*8, intent(in) :: inflex
-    integer, intent(in) :: N
-    real*8, intent(in) :: u1(0:N), u2(0:N), r(0:N)
-    real*8, intent(out) :: grad1, grad2
-    integer*8, intent(out) :: flag
-    grad1=(u1(inflex-1)-u1(inflex))/(r(inflex-1)-r(inflex))
-    grad2=(u2(inflex+1)-u2(inflex))/(r(inflex+1)-r(inflex))
-    flag=0
-    if(abs(grad1-grad2)<0.000000001) then    !!10**-10!!
-        flag=1
-    elseif(abs(grad1-grad2)>0.000000001) then
-        flag=0
-    end if
-    end subroutine grad
-
-
-    subroutine normtotal(inflex, N, h, u1, u2, ut)
-    integer*8, intent(in) :: inflex
-    integer, intent(in) :: N
-    real*8, intent(in) :: h, u1(0:N), u2(0:N)
-    real*8, intent(inout) :: ut(0:N)
-    real*8 :: norm, area
-    do i=0, inflex
-        ut(i)=u1(i)
-    end do
-    do i=inflex+1, N
-        ut(i)=u2(i)
-    end do
-    area=0.0
-    do i=0, N-1
-        area=area + 0.5*h*((ut(i)**2) + (ut(i+1)**2))
-    end do
-    norm=1.0/sqrt(area)
-    print *, 'Area=', area
-    print *, 'Normalisation constant=', norm
-    ut=ut*norm
-    end subroutine normtotal
-
-
-    !!!!!!!!!!!!!!!!!!!!!!!!
-    !!!! END OF PROGRAM !!!!
-    !!!!!!!!!!!!!!!!!!!!!!!!
