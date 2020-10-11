@@ -18,7 +18,7 @@ To run:
 
 The user is presented with an interactive calculation where they must provide a principal quantum number `n` and an angular momentum quantum number `l`. These are integers which must satisfy `n > 0` and `l >= n`.
 
-Similarly, to compile the electronic collision part of the project:
+Similarly, to compile the electron impact excitation part of the project:
 
     gfortran collision.f95 -o collision.x -mcmodel=medium -O3
 
