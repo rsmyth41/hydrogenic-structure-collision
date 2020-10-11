@@ -11,8 +11,8 @@
     real*8 :: pn1, pn2, l1, l2, Z                                ! Quantum numbers of 1st, 2nd configs and atomic number
     real*8 :: rmax1, rmax2, rmax                                 ! Max radius of 1st and 2nd configs and the max radius used throughout
     real*8 :: Ein1, Ein2, E1, E2, E, h                           ! Energy (in Hartree atomic units: m=hbar=q=1, c=137) and grid step spacing
-    integer :: i, inflex1, inflex2                             ! Integer counter and inflection point array position
-    integer :: nodes1, nodes2, nodecount, flag                 ! Number of nodes a plot should have and the number it actually has
+    integer :: i, inflex1, inflex2                               ! Integer counter and inflection point array position
+    integer :: nodes1, nodes2, nodecount, flag, nodecountflag    ! Number of nodes a plot should have and the number it actually has
     real*8 :: grad11, grad22, grad12, grad21                     ! Gradients from inward and outward integrations about inflex point
     real*8 :: sum1, sum2                                         ! Summations used for modifying energy
     real*8 :: linesum, linestrength, Ediff, wavelen
@@ -127,49 +127,15 @@
 
     !! COUNTS NODES in our plot and SHIFTS INITITAL ENERGY !!
     nodecount = 0
-    do i = 0, inflex1
-        if (u1(i) * u1(i + 1) < 0) then
-            nodecount = nodecount + 1
-        end if
-    end do
+    call nodeChecker(nodecount, nodecountflag, inflex1, u1, u2, nodes1, E, N1)
 
-    do i = N1 - 1, inflex1, -1
-        if (u2(i) * u2(i + 1) < 0) then
-            nodecount = nodecount + 1
-        end if
-    end do
-
-    if (nodecount == nodes1) then
-        goto 3
-    end if
-
-    if(nodecount /= nodes1 .and. nodecount > nodes1) then
-        E = E * 1.1
-    elseif (nodecount /= nodes1 .and. nodecount < nodes1) then
-        E = E * 0.9
-    end if
-
-    goto 2
-
+    if (nodecountflag == 1) goto 2
+    if (nodecountflag == -1) goto 3
 3   continue
 
     !! CALCULATING GRADIENTS and MODIFYING ENERGY !!
-    call grad(inflex1, N1, u1, u2, r, flag, grad11, grad12)
-
-    if (flag == 0) then
-        sum1 = 0.0
-        sum2 = 0.0
-        do i = 0, inflex1
-            sum1 = sum1 + 0.5 * h * ((u1(i) ** 2) + (u1(i + 1) ** 2))
-        end do
-        do i = inflex1, N1 - 1
-            sum2 = sum2 + 0.5 * h * ((u2(i) ** 2) + (u2(i + 1) ** 2))
-        end do
-        sum1 = sum1 + sum2
-        !! Approx from Atomic structure theory text !!
-        E = E + ((grad11 - grad12) * u1(inflex1)) / (2 * sum1)
-        goto 2
-    end if
+    call grad(inflex1, N1, u1, u2, r, flag, grad11, grad12, h, E)
+    if (flag == 0) goto 2
 
     !! Constructing and normalising new TOTAL VECTOR ut(i) !!
     call normtotal(inflex1, N1, h, u1, u2, ut)
@@ -223,43 +189,17 @@
     end if
     call numerov(h, inflex2, N2, a2, w1, w2)
 
-    nodecount=0
-    do i=0, inflex2
-        if(w1(i)*w1(i+1)<0) then
-            nodecount=nodecount+1
-        end if
-    end do
-    do i=N2-1, inflex2, -1
-        if(w2(i)*w2(i+1)<0) then
-            nodecount=nodecount+1
-        end if
-    end do
-    if(nodecount==nodes2) then
-        goto 5
-    end if
-    if(nodecount/=nodes2 .and. nodecount>nodes2) then
-        E=E*1.1
-    else if(nodecount/=nodes2 .and. nodecount<nodes2) then
-        E=E*0.9
-    end if
-    goto 4
+    nodecount = 0
+    call nodeChecker(nodecount, nodecountflag, inflex2, w1, w2, nodes2, E, N2)
+
+    if (nodecountflag == 1) goto 4
+    if (nodecountflag == -1) goto 5
 5   continue
 
     call scalevector(N2, inflex2, w1, w2)
-    call grad(inflex2, N2, w1, w2, r, flag, grad21, grad22)
-    if(flag==0) then
-        sum1=0.0
-        sum2=0.0
-        do i=0, inflex2
-            sum1=sum1 + 0.5*h*((w1(i)**2) + (w1(i+1)**2))
-        end do
-        do i=inflex2, N2-1
-            sum2=sum2 + 0.5*h*((w2(i)**2) + (w2(i+1)**2))
-        end do
-        sum1=sum1+sum2
-        E=E+((grad21-grad22)*w1(inflex2))/(2*sum1)
-        goto 4
-    end if
+
+    call grad(inflex2, N2, w1, w2, r, flag, grad21, grad22, h, E)
+    if (flag == 0) goto 4
   
     call normtotal(inflex2, N2, h, w1, w2, wt)
 
