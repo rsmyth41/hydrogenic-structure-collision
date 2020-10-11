@@ -19,7 +19,6 @@ subroutine nodeChecker(nodecount, nodecountflag, inflex, u1, u2, nodes, E, N)
     end do
 
     if (nodecount == nodes) then
-        nodecountflag = -1 
         goto 1
     end if
 

@@ -10,7 +10,7 @@
     real*8, allocatable :: w1(:), w2(:), wt(:)                   ! Vectors of wavefunction of second configuration
     real*8 :: pn1, pn2, l1, l2, Z                                ! Quantum numbers of 1st, 2nd configs and atomic number
     real*8 :: rmax1, rmax2, rmax                                 ! Max radius of 1st and 2nd configs and the max radius used throughout
-    real*8 :: Ein1, Ein2, E1, E2, E, h                           ! Energy (in Hartree atomic units: m=hbar=q=1, c=137) and grid step spacing
+    real*8 :: Ein1, Ein2, E1, E2, E                              ! Energy (in Hartree atomic units: m=hbar=q=1, c=137) and grid step spacing
     integer :: i, inflex1, inflex2                               ! Integer counter and inflection point array position
     integer :: nodes1, nodes2, nodecount, flag, nodecountflag    ! Number of nodes a plot should have and the number it actually has
     real*8 :: grad11, grad22, grad12, grad21                     ! Gradients from inward and outward integrations about inflex point
@@ -18,8 +18,8 @@
     real*8 :: linesum, linestrength, Ediff, wavelen
     real*8 :: A21, f12, g1, g2, temp
     integer*8 :: inflexflag, traflag
-    real*8, allocatable :: radial1(:), radial2(:)               !radial range for collision calculation
-
+    real*8, allocatable :: radial1(:), radial2(:)                !radial range for collision calculation
+    real*8 :: h = 0.005                                          !Stepsize for calculations
 
 !!!! TODO: ADD E2 EXPRESSIONS FOR A VALUES FROM NIST PAPER !!!!!
 !!!! TODO: USE THE VALUES OF 3j SYMBOLS FROM symbol_3j CODE TO DETERMINE THE REDUCED MATRIX ELEMENTS !!!!
@@ -52,23 +52,13 @@
     print *, 'Enter the value of Z'
     read *, Z
 
-    !! Calculates MAXIMUM r for both nl configs !!
-    rmax1 = ((3.0 * pn1 * pn1 - l1 * (l1 + 1.0))) * 4.0 / Z
-    rmax2 = ((3.0 * pn2 * pn2 - l2 * (l2 + 1.0))) * 4.0 / Z
-
-    !! Calculates the number of nodes each nl config should have !!
-    nodes1 = pn1 - 1 - l1
-    nodes2 = pn2 - 1 - l2
-
-    h = 0.005  !! Stepsize for calculations
-
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! FIRST CONFIGURATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    rmax1 = ((3.0 * pn1 * pn1 - l1 * (l1 + 1.0))) * 4.0 / Z
+    nodes1 = pn1 - 1 - l1
 
     N1 = real(rmax1 / h)
-    print *, N1
-    E = Ein1
 
     allocate(r(0: N1))
     allocate(v(0: N1))
@@ -109,13 +99,13 @@
 
     !! Calculates ARRAY ELEMENTS of a !!
     do i = 1, N1
-        a1(i) = 2.0 * (E - v(i)) - (l1 * (l1 + 1.0)) / (r(i) * r(i))
+        a1(i) = 2.0 * (Ein1 - v(i)) - (l1 * (l1 + 1.0)) / (r(i) * r(i))
     end do
 
     !! Calculates INFLECTION POINT from LHS !!
     call inflection(a1, N1, inflex1)
     if (inflex1 == -1 .or. inflex1 == N1) then
-        E = E * 10.0
+        Ein1 = Ein1 * 10.0
         goto 2
     end if
 
@@ -127,14 +117,13 @@
 
     !! COUNTS NODES in our plot and SHIFTS INITITAL ENERGY !!
     nodecount = 0
-    call nodeChecker(nodecount, nodecountflag, inflex1, u1, u2, nodes1, E, N1)
+    call nodeChecker(nodecount, nodecountflag, inflex1, u1, u2, nodes1, Ein1, N1)
 
     if (nodecountflag == 1) goto 2
-    if (nodecountflag == -1) goto 3
 3   continue
 
     !! CALCULATING GRADIENTS and MODIFYING ENERGY !!
-    call grad(inflex1, N1, u1, u2, r, flag, grad11, grad12, h, E)
+    call grad(inflex1, N1, u1, u2, r, flag, grad11, grad12, h, Ein1)
     if (flag == 0) goto 2
 
     !! Constructing and normalising new TOTAL VECTOR ut(i) !!
@@ -142,8 +131,8 @@
 
     print *, 'Inflection point is at', r(inflex1)
     !! Energy output in Ryd rel to lowest !!
-    print 1000, 'Energy of n =', pn1, 'l =', l1, 'config is', E
-    E1 = E
+    print 1000, 'Energy of n =', pn1, 'l =', l1, 'config is', Ein1
+    E1 = Ein1
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! SECOND CONFIGURATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -151,8 +140,10 @@
 
     deallocate(r,v)
 
+    rmax2 = ((3.0 * pn2 * pn2 - l2 * (l2 + 1.0))) * 4.0 / Z
+    nodes2 = pn2 - 1 - l2
+
     N2=real(rmax2/h)
-    print *, N2
     E=Ein2
 
     allocate(r(0:N2))
@@ -323,7 +314,6 @@
         write(51,*) r(i), radial1(i)
         write(52,*) r(i), radial2(i)
     end do
-    print *, Ncol
     close(51)
     close(52)
 
