@@ -2,23 +2,51 @@
     use subroutinesMod
     implicit none
 
-    integer :: N1, N2, N, Ncol                                   ! Number of grid steps
-    real*8, parameter :: rmin=0.0                   		     ! Minimum radius
-    real*8, allocatable :: r(:), v(:)                            ! Vector of positions and potential
-    real*8, allocatable :: a1(:), a2(:)               		     ! Vector of Numerov variable
-    real*8, allocatable :: u1(:), u2(:), ut(:)      	         ! Vectors of wavefunction of first configuration
-    real*8, allocatable :: w1(:), w2(:), wt(:)                   ! Vectors of wavefunction of second configuration
-    real*8 :: pn1, pn2, l1, l2, Z                                ! Quantum numbers of 1st, 2nd configs and atomic number
-    real*8 :: rmax1, rmax2, rmax                                 ! Max radius of 1st and 2nd configs and the max radius used throughout
-    real*8 :: Ein1, Ein2, E1, E2, E                              ! Energy (in Hartree atomic units: m=hbar=q=1, c=137) and grid step spacing
-    integer :: i, inflex1, inflex2                               ! Integer counter and inflection point array position
-    integer :: nodes1, nodes2, nodecount, flag, nodecountflag    ! Number of nodes a plot should have and the number it actually has
-    real*8 :: grad11, grad22, grad12, grad21                     ! Gradients from inward and outward integrations about inflex point
-    real*8 :: linesum, linestrength, Ediff, wavelen
-    real*8 :: A21, f12, g1, g2, temp
-    integer*8 :: inflexflag, traflag
-    real*8, allocatable :: radial1(:), radial2(:)                !radial range for collision calculation
-    real*8 :: h = 0.005                                          !Stepsize for calculations
+    ! Number of grid steps
+    integer :: N1, N2, N, Ncol
+
+    ! Minimum radius
+    real(kind=8), parameter :: rmin=0.0
+
+    ! Vector of positions and potential
+    real(kind=8), allocatable :: r(:), v(:)
+
+    ! Vector of Numerov variable
+    real(kind=8), allocatable :: a1(:), a2(:)
+
+    ! Vectors of wavefunction of first configuration
+    real(kind=8), allocatable :: u1(:), u2(:), ut(:)
+
+    ! Vectors of wavefunction of second configuration
+    real(kind=8), allocatable :: w1(:), w2(:), wt(:)
+
+    ! Quantum numbers of 1st, 2nd configs and atomic number
+    real(kind=8) :: pn1, pn2, l1, l2, Z
+
+    ! Max radius of 1st and 2nd configs and the max radius used throughout
+    real(kind=8) :: rmax1, rmax2, rmax
+
+    ! Energy (in Hartree atomic units: m=hbar=q=1, c=137) and grid step spacing
+    real(kind=8) :: Ein1, Ein2, E1, E2, E
+
+    ! Integer counter and inflection point array position
+    integer :: i, inflex1, inflex2
+
+    ! Number of nodes a plot should have and the number it actually has
+    integer :: nodes1, nodes2, nodecount, flag, nodecountflag
+
+    ! Gradients from inward and outward integrations about inflex point
+    real(kind=8) :: grad11, grad22, grad12, grad21
+
+    !radial range for collision calculation
+    real(kind=8), allocatable :: radial1(:), radial2(:)
+
+    !Stepsize for calculations
+    real(kind=8) :: h = 0.005
+
+    real(kind=8) :: linesum, linestrength, Ediff, wavelen
+    real(kind=8) :: A21, f12, g1, g2, temp
+    integer(kind=8) :: inflexflag, traflag
 
 !!!! TODO: ADD E2 EXPRESSIONS FOR A VALUES FROM NIST PAPER !!!!!
 !!!! TODO: USE THE VALUES OF 3j SYMBOLS FROM symbol_3j CODE TO DETERMINE THE REDUCED MATRIX ELEMENTS !!!!
@@ -55,7 +83,7 @@
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! FIRST CONFIGURATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     rmax1 = ((3.0 * pn1 * pn1 - l1 * (l1 + 1.0))) * 4.0 / Z
-    nodes1 = pn1 - 1 - l1
+    nodes1 = real(pn1 - 1 - l1)
 
     N1 = real(rmax1 / h)
 
@@ -119,7 +147,6 @@
     call nodeChecker(nodecount, nodecountflag, inflex1, u1, u2, nodes1, Ein1, N1)
 
     if (nodecountflag == 1) goto 2
-3   continue
 
     !! CALCULATING GRADIENTS and MODIFYING ENERGY !!
     call grad(inflex1, N1, u1, u2, r, flag, grad11, grad12, h, Ein1)
@@ -140,7 +167,7 @@
     deallocate(r,v)
 
     rmax2 = ((3.0 * pn2 * pn2 - l2 * (l2 + 1.0))) * 4.0 / Z
-    nodes2 = pn2 - 1 - l2
+    nodes2 = real(pn2 - 1 - l2)
 
     N2=real(rmax2/h)
     E=Ein2

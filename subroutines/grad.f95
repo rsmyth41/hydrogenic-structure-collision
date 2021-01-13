@@ -1,9 +1,9 @@
 subroutine grad(inflex, N, u1, u2, r, flag, grad1, grad2, h, E)
     integer, intent(in) :: inflex, N
-    real*8, intent(inout) :: E
-    real*8, intent(in) :: u1(0: N), u2(0: N), r(0: N), h
-    real*8 ::  sum1, sum2, totalSum
-    real*8, intent(out) :: grad1, grad2
+    real(kind=8), intent(inout) :: E
+    real(kind=8), intent(in) :: u1(0: N), u2(0: N), r(0: N), h
+    real(kind=8) ::  sum1, sum2, totalSum
+    real(kind=8), intent(out) :: grad1, grad2
     integer, intent(out) :: flag
 
     grad1 = (u1(inflex - 1) - u1(inflex))/(r(inflex - 1) - r(inflex))

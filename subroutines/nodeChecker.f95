@@ -2,7 +2,7 @@ subroutine nodeChecker(nodecount, nodecountflag, inflex, u1, u2, nodes, E, N)
     integer, intent(in) :: inflex, N, nodes
     integer, intent(inout) :: nodecount
     integer, intent(out) :: nodecountflag
-    real*8, intent(inout) :: u1(0: N), u2(0: N), E
+    real(kind=8), intent(inout) :: u1(0: N), u2(0: N), E
 
     nodecountflag = 0
 

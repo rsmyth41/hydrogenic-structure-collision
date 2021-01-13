@@ -1,8 +1,8 @@
 subroutine scalevector(N, inflex, u1, u2)
     integer, intent(in) :: inflex, N
-    real*8, intent(in) :: u1(0: N)
-    real*8, intent(inout) :: u2(0: N)
-    real*8 :: scale, x, y
+    real(kind=8), intent(in) :: u1(0: N)
+    real(kind=8), intent(inout) :: u2(0: N)
+    real(kind=8) :: scale, x, y
 
     x = u1(inflex)
     y = u2(inflex)

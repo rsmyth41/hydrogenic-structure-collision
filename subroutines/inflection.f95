@@ -1,5 +1,5 @@
 subroutine inflection(a, N, inflex)
-    real*8, intent(in) :: a(0: N)
+    real(kind=8), intent(in) :: a(0: N)
     integer, intent(in) :: N
     integer, intent(out) :: inflex
     integer :: i
