@@ -1,8 +1,10 @@
 subroutine nodeChecker(nodecount, nodecountflag, inflex, u1, u2, nodes, E, N)
+    use variablesMod, only : real_prec
+
     integer, intent(in) :: inflex, N, nodes
     integer, intent(inout) :: nodecount
     integer, intent(out) :: nodecountflag
-    real(kind=8), intent(inout) :: u1(0: N), u2(0: N), E
+    real(kind = real_prec), intent(inout) :: u1(0: N), u2(0: N), E
 
     nodecountflag = 0
 

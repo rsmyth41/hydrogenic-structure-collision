@@ -1,9 +1,11 @@
 subroutine normtotal(inflex, N, h, u1, u2, ut)
+    use variablesMod, only : real_prec
+
     integer, intent(in) :: inflex, N
     integer :: i
-    real(kind=8), intent(in) :: h, u1(0: N), u2(0: N)
-    real(kind=8), intent(inout) :: ut(0: N)
-    real(kind=8) :: norm, area
+    real(kind = real_prec), intent(in) :: h, u1(0: N), u2(0: N)
+    real(kind = real_prec), intent(inout) :: ut(0: N)
+    real(kind = real_prec) :: norm, area
     
     do i = 0, inflex
         ut(i) = u1(i)

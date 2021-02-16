@@ -10,7 +10,7 @@ The `collision.f95` part of this project uses the radial parts of the atomic orb
 ## Compiling and executing
 To compile the atomic structure part of the project:
 
-    gfortran subroutines/subroutinesMod.f95 structure.f95 -o structure.x -mcmodel=medium -O3
+    gfortran variablesMod.f95 subroutines/subroutinesMod.f95 structure.f95 -o structure.x -mcmodel=medium -O3
 
 To run: 
 

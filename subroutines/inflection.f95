@@ -1,5 +1,7 @@
 subroutine inflection(a, N, inflex)
-    real(kind=8), intent(in) :: a(0: N)
+    use variablesMod, only : real_prec
+
+    real(kind = real_prec), intent(in) :: a(0: N)
     integer, intent(in) :: N
     integer, intent(out) :: inflex
     integer :: i

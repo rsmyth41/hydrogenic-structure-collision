@@ -1,9 +1,11 @@
 subroutine numerov(h, inflex, N, a, u1, u2)
+    use variablesMod, only : real_prec, int_prec
+
     integer, intent(in) :: inflex, N
-    real(kind=8), intent(in) :: h, a(0: N)
-    real(kind=8), intent(inout) :: u1(0: N), u2(0: N)
-    real(kind=8) :: c1, c2, numerator, denominator
-    integer(kind=8) :: i
+    real(kind = real_prec), intent(in) :: h, a(0: N)
+    real(kind = real_prec), intent(inout) :: u1(0: N), u2(0: N)
+    real(kind = real_prec) :: c1, c2, numerator, denominator
+    integer :: i
 
     c1 = 5.0 * (h * h / 6.0)
     c2 = h * h/ 12.0

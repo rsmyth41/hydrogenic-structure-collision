@@ -1,52 +1,7 @@
     program atom
     use subroutinesMod
+    use variablesMod
     implicit none
-
-    ! Number of grid steps
-    integer :: N1, N2, N, Ncol
-
-    ! Minimum radius
-    real(kind=8), parameter :: rmin=0.0
-
-    ! Vector of positions and potential
-    real(kind=8), allocatable :: r(:), v(:)
-
-    ! Vector of Numerov variable
-    real(kind=8), allocatable :: a1(:), a2(:)
-
-    ! Vectors of wavefunction of first configuration
-    real(kind=8), allocatable :: u1(:), u2(:), ut(:)
-
-    ! Vectors of wavefunction of second configuration
-    real(kind=8), allocatable :: w1(:), w2(:), wt(:)
-
-    ! Quantum numbers of 1st, 2nd configs and atomic number
-    real(kind=8) :: pn1, pn2, l1, l2, Z
-
-    ! Max radius of 1st and 2nd configs and the max radius used throughout
-    real(kind=8) :: rmax1, rmax2, rmax
-
-    ! Energy (in Hartree atomic units: m=hbar=q=1, c=137) and grid step spacing
-    real(kind=8) :: Ein1, Ein2, E1, E2, E
-
-    ! Integer counter and inflection point array position
-    integer :: i, inflex1, inflex2
-
-    ! Number of nodes a plot should have and the number it actually has
-    integer :: nodes1, nodes2, nodecount, flag, nodecountflag
-
-    ! Gradients from inward and outward integrations about inflex point
-    real(kind=8) :: grad11, grad22, grad12, grad21
-
-    !radial range for collision calculation
-    real(kind=8), allocatable :: radial1(:), radial2(:)
-
-    !Stepsize for calculations
-    real(kind=8) :: h = 0.005
-
-    real(kind=8) :: linesum, linestrength, Ediff, wavelen
-    real(kind=8) :: A21, f12, g1, g2, temp
-    integer(kind=8) :: inflexflag, traflag
 
 !!!! TODO: ADD E2 EXPRESSIONS FOR A VALUES FROM NIST PAPER !!!!!
 !!!! TODO: USE THE VALUES OF 3j SYMBOLS FROM symbol_3j CODE TO DETERMINE THE REDUCED MATRIX ELEMENTS !!!!
@@ -169,34 +124,34 @@
     rmax2 = ((3.0 * pn2 * pn2 - l2 * (l2 + 1.0))) * 4.0 / Z
     nodes2 = real(pn2 - 1 - l2)
 
-    N2=real(rmax2/h)
-    E=Ein2
+    N2 = real(rmax2 / h)
+    E = Ein2
 
-    allocate(r(0:N2))
-    allocate(v(0:N2))
-    allocate(a2(0:N2))
-    allocate(w1(0:N2))
-    allocate(w2(0:N2))
-    allocate(wt(0:N2))
+    allocate(r(0: N2))
+    allocate(v(0: N2))
+    allocate(a2(0: N2))
+    allocate(w1(0: N2))
+    allocate(w2(0: N2))
+    allocate(wt(0: N2))
 
-    do i=1, N2
-        r(i)=real(i,8)*h
-        v(i)=(-1.0*Z)/r(i)
+    do i = 1, N2
+        r(i) = real(i, 8) * h
+        v(i) = (-1.0 * Z) / r(i)
     end do
     print *, ' '
 
-    v(0)=-100000000.0            ! Large close the origin
-    r(0)=0.0                     ! Initial position
-    w1(0)=0.0
-    w1(1)=0.000001
-    w2(N2)=0.0
-    w2(N2-1)=0.0000001
-    a2(0)=100000000.0
+    v(0) = -100000000.0            ! Large close the origin
+    r(0) = 0.0                     ! Initial position
+    w1(0) = 0.0
+    w1(1) = 0.000001
+    w2(N2) = 0.0
+    w2(N2 - 1) = 0.0000001
+    a2(0) = 100000000.0
 
 4   continue
 
-    do i=1, N2
-        a2(i)=2.0*(E-v(i)) - (l2*(l2+1.0))/(r(i)*r(i))
+    do i = 1, N2
+        a2(i) = 2.0 * (E - v(i)) - (l2 * (l2 + 1.0)) / (r(i) * r(i))
     end do
 
     call inflection(a2, N2, inflex2)
@@ -227,20 +182,18 @@
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!! TRANSITIONS & A VALUES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if(N1>N2) then
-        N=N2
-    else if(N1<N2) then         !! THIS IF STATEMENT ENSURES THAT WE ONLY INTEGRATE OVER NON-ZERO !!
-        N=N1                    !! OF THE "SMALLEST" RADIAL FUNCTION i.e. TO ENSURE WE DONT       !!
+    if (N1 > N2) then
+        N = N2
+    else if (N1 < N2) then         !! THIS IF STATEMENT ENSURES THAT WE ONLY INTEGRATE OVER NON-ZERO !!
+        N = N1                    !! OF THE "SMALLEST" RADIAL FUNCTION i.e. TO ENSURE WE DONT       !!
     end if                      !! EXCEED THE LIMIT OF THE ARRAY                                  !!
 
     deallocate(r)
-    allocate(r(0:N))
-    r(0)=0.0
+    allocate(r(0 : N))
+    r(0) = 0.0
     do i=1, N
         r(i)=real(i,8)*h
     end do
-
-    traflag=0     !! A FLAG FOR DIFFERENT TYPES OF TRANSITION e.g. E1,E2 etc !!
 
     if(abs(l1-l2)>1.0 .or. l1-l2==0.0) then
         print *, 'Delta l must equal +/- 1 for E1 transition. No transition calculations carried out.'

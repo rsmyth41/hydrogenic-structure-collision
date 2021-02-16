@@ -1,8 +1,10 @@
 subroutine scalevector(N, inflex, u1, u2)
+    use variablesMod, only : real_prec
+
     integer, intent(in) :: inflex, N
-    real(kind=8), intent(in) :: u1(0: N)
-    real(kind=8), intent(inout) :: u2(0: N)
-    real(kind=8) :: scale, x, y
+    real(kind = real_prec), intent(in) :: u1(0: N)
+    real(kind = real_prec), intent(inout) :: u2(0: N)
+    real(kind = real_prec) :: scale, x, y
 
     x = u1(inflex)
     y = u2(inflex)
