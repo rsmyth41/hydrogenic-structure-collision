@@ -1,36 +1,39 @@
-subroutine nodeChecker(nodecount, nodecountflag, inflex, u1, u2, nodes, E, N)
+subroutine nodeChecker(nodeCount, nodeCountFlag, inflectionPoint, firstVector, secondVector, numNodes, levelEnergy, totalNumPoints)
     use variablesMod, only : real_prec
+    implicit none
 
-    integer, intent(in) :: inflex, N, nodes
-    integer, intent(inout) :: nodecount
-    integer, intent(out) :: nodecountflag
-    real(kind = real_prec), intent(inout) :: u1(0: N), u2(0: N), E
+    integer, intent(in) :: inflectionPoint, totalNumPoints, numNodes
+    integer, intent(inout) :: nodeCount
+    integer, intent(out) :: nodeCountFlag
+    real(kind = real_prec), intent(inout) :: firstVector(0: totalNumPoints), secondVector(0: totalNumPoints), levelEnergy
 
-    nodecountflag = 0
+    ! Local variables
+    integer :: i
 
-    do i = 0, inflex
-        if (u1(i) * u1(i + 1) < 0) then
-            nodecount = nodecount + 1
+    nodeCountFlag = 0
+
+    do i = 0, inflectionPoint
+        if (firstVector(i) * firstVector(i + 1) < 0) then
+            nodeCount = nodeCount + 1
         end if
     end do
 
-    do i = N - 1, inflex, -1
-        if (u2(i) * u2(i + 1) < 0) then
-            nodecount = nodecount + 1
+    do i = totalNumPoints - 1, inflectionPoint, -1
+        if (secondVector(i) * secondVector(i + 1) < 0) then
+            nodeCount = nodeCount + 1
         end if
     end do
 
-    if (nodecount == nodes) then
-        goto 1
+    if (nodeCount == numNodes) then
+        return
     end if
 
-    if(nodecount /= nodes .and. nodecount > nodes) then
-        E = E * 1.1
-    elseif (nodecount /= nodes .and. nodecount < nodes) then
-        E = E * 0.9
+    if(nodeCount /= numNodes .and. nodeCount > numNodes) then
+        levelEnergy = levelEnergy * 1.1
+    elseif (nodeCount /= numNodes .and. nodeCount < numNodes) then
+        levelEnergy = levelEnergy * 0.9
     end if
 
-    nodecountflag = 1
-1   continue
+    nodeCountFlag = 1
 
 end subroutine nodeChecker

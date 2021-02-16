@@ -1,20 +1,14 @@
-    program atom
+    program hydrogenicAtomIon
     use subroutinesMod
     use variablesMod
     implicit none
 
-!!!! TODO: ADD E2 EXPRESSIONS FOR A VALUES FROM NIST PAPER !!!!!
-!!!! TODO: USE THE VALUES OF 3j SYMBOLS FROM symbol_3j CODE TO DETERMINE THE REDUCED MATRIX ELEMENTS !!!!
-!!!! TODO: LOOP OVER ALL n AND l UP TO APPROX 10h !!!!
-
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!! DATA INPUT for nl configs !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     print *, 'Enter the values of (n1 l1) of first configuration'
 100 continue
-    read *, pn1, l1
-    if (l1 > pn1 .or. l1 == pn1 .or. l1 < 0.0) then
+    read *, principalNumber1, angularNumber1
+    if (angularNumber1 > principalNumber1 .or. angularNumber1 == principalNumber1 .or. angularNumber1 < 0.0) then
         print *, 'Error, check the configuration input'
         print *, 'Enter the values of (n1 l1) of first configuration'
         goto 100
@@ -23,8 +17,8 @@
 
     print *, 'Enter the values of (n2 l2) of second configuration'
 101 continue
-    read *, pn2, l2
-    if (l2 > pn2 .or. l2 == pn2 .or. l2 < 0.0) then
+    read *, principalNumber2, angularNumber2
+    if (angularNumber2 > principalNumber2 .or. angularNumber2 == principalNumber2 .or. angularNumber2 < 0.0) then
         print *, 'Error, check the configuration input'
         print *, 'Enter the values of (n2 l2) of first configuration'
         goto 101
@@ -32,15 +26,14 @@
     Ein2 = -0.001
 
     print *, 'Enter the value of Z'
-    read *, Z
+    read *, atomicNumber
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! FIRST CONFIGURATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    rmax1 = ((3.0 * pn1 * pn1 - l1 * (l1 + 1.0))) * 4.0 / Z
-    nodes1 = real(pn1 - 1 - l1)
 
-    N1 = real(rmax1 / h)
+    rmax1 = ((3.0 * (principalNumber1 ** 2) - angularNumber1 * (angularNumber1 + 1.0))) * 4.0 / atomicNumber
+    nodes1 = real(principalNumber1 - 1 - angularNumber1)
+
+    N1 = real(rmax1 / deltaR)
 
     allocate(r(0: N1))
     allocate(v(0: N1))
@@ -50,8 +43,8 @@
     allocate(ut(0: N1))
 
     do i = 1, N1
-        r(i) = real(i, 8) * h
-        v(i) = (-1.0 * Z) / r(i)
+        r(i) = real(i, 8) * deltaR
+        v(i) = (-1.0 * atomicNumber) / r(i)
     end do
     print *, ' '
 
@@ -81,7 +74,7 @@
 
     !! Calculates ARRAY ELEMENTS of a !!
     do i = 1, N1
-        a1(i) = 2.0 * (Ein1 - v(i)) - (l1 * (l1 + 1.0)) / (r(i) * r(i))
+        a1(i) = 2.0 * (Ein1 - v(i)) - (angularNumber1 * (angularNumber1 + 1.0)) / (r(i) * r(i))
     end do
 
     !! Calculates INFLECTION POINT from LHS !!
@@ -92,7 +85,7 @@
     end if
 
     !! Uses NUMEROV METHOD !!
-    call numerov(h, inflex1, N1, a1, u1, u2)
+    call numerov(deltaR, inflex1, N1, a1, u1, u2)
 
     !! RESCALING of u2(i) to connect with u1(i) !!
     call scalevector(N1, inflex1, u1, u2)
@@ -104,27 +97,25 @@
     if (nodecountflag == 1) goto 2
 
     !! CALCULATING GRADIENTS and MODIFYING ENERGY !!
-    call grad(inflex1, N1, u1, u2, r, flag, grad11, grad12, h, Ein1)
+    call grad(inflex1, N1, u1, u2, r, flag, deltaR, Ein1)
     if (flag == 0) goto 2
 
     !! Constructing and normalising new TOTAL VECTOR ut(i) !!
-    call normtotal(inflex1, N1, h, u1, u2, ut)
+    call normtotal(inflex1, N1, deltaR, u1, u2, ut)
 
     print *, 'Inflection point is at', r(inflex1)
     !! Energy output in Ryd rel to lowest !!
-    print 1000, 'Energy of n =', pn1, 'l =', l1, 'config is', Ein1
+    print 1000, 'Energy of n =', principalNumber1, 'l =', angularNumber1, 'config is', Ein1
     E1 = Ein1
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! SECOND CONFIGURATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     deallocate(r,v)
 
-    rmax2 = ((3.0 * pn2 * pn2 - l2 * (l2 + 1.0))) * 4.0 / Z
-    nodes2 = real(pn2 - 1 - l2)
+    rmax2 = ((3.0 * principalNumber2 * principalNumber2 - angularNumber2 * (angularNumber2 + 1.0))) * 4.0 / atomicNumber
+    nodes2 = real(principalNumber2 - 1 - angularNumber2)
 
-    N2 = real(rmax2 / h)
+    N2 = real(rmax2 / deltaR)
     E = Ein2
 
     allocate(r(0: N2))
@@ -135,8 +126,8 @@
     allocate(wt(0: N2))
 
     do i = 1, N2
-        r(i) = real(i, 8) * h
-        v(i) = (-1.0 * Z) / r(i)
+        r(i) = real(i, 8) * deltaR
+        v(i) = (-1.0 * atomicNumber) / r(i)
     end do
     print *, ' '
 
@@ -151,7 +142,7 @@
 4   continue
 
     do i = 1, N2
-        a2(i) = 2.0 * (E - v(i)) - (l2 * (l2 + 1.0)) / (r(i) * r(i))
+        a2(i) = 2.0 * (E - v(i)) - (angularNumber2 * (angularNumber2 + 1.0)) / (r(i) * r(i))
     end do
 
     call inflection(a2, N2, inflex2)
@@ -159,7 +150,7 @@
         E=E*10.0
     goto 4
     end if
-    call numerov(h, inflex2, N2, a2, w1, w2)
+    call numerov(deltaR, inflex2, N2, a2, w1, w2)
 
     nodecount = 0
     call nodeChecker(nodecount, nodecountflag, inflex2, w1, w2, nodes2, E, N2)
@@ -170,18 +161,17 @@
 
     call scalevector(N2, inflex2, w1, w2)
 
-    call grad(inflex2, N2, w1, w2, r, flag, grad21, grad22, h, E)
+    call grad(inflex2, N2, w1, w2, r, flag, deltaR, E)
     if (flag == 0) goto 4
   
-    call normtotal(inflex2, N2, h, w1, w2, wt)
+    call normtotal(inflex2, N2, deltaR, w1, w2, wt)
 
     print *, 'Inflection point is at', r(inflex2)
-    print 1000, 'Energy of n=', pn2, 'l=', l2, 'config is', E  !! Energy output in Ryd rel to lowest !!
+    print 1000, 'Energy of n=', principalNumber2, 'l=', angularNumber2, 'config is', E  !! Energy output in Ryd rel to lowest !!
     E2=E
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!! TRANSITIONS & A VALUES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
     if (N1 > N2) then
         N = N2
     else if (N1 < N2) then         !! THIS IF STATEMENT ENSURES THAT WE ONLY INTEGRATE OVER NON-ZERO !!
@@ -189,26 +179,26 @@
     end if                      !! EXCEED THE LIMIT OF THE ARRAY                                  !!
 
     deallocate(r)
-    allocate(r(0 : N))
+    allocate(r(0: N))
     r(0) = 0.0
-    do i=1, N
-        r(i)=real(i,8)*h
+    do i = 1, N
+        r(i) = real(i, 8) * deltaR
     end do
 
-    if(abs(l1-l2)>1.0 .or. l1-l2==0.0) then
+    if(abs(angularNumber1 - angularNumber2) > 1.0 .or. angularNumber1 - angularNumber2 == 0.0) then
         print *, 'Delta l must equal +/- 1 for E1 transition. No transition calculations carried out.'
-        traflag=1
+        traflag = 1
         goto 500
     end if
 
     linesum=0.0
     do i=0, N-1
-        linesum= linesum + 0.5*h*((ut(i)*wt(i)*r(i)) + (ut(i+1)*wt(i+1)*r(i+1)))       !! E1 transition matrix element !!
+        linesum= linesum + 0.5*deltaR*((ut(i)*wt(i)*r(i)) + (ut(i+1)*wt(i+1)*r(i+1)))       !! E1 transition matrix element !!
     end do
-    if(l1==l2+1.0) then
-        linestrength= 2.0*(l2+1)*linesum*linesum         !! Prefactor of 2 !!
-    else if(l1==l2-1.0) then                             !! Expressions here from Atomic Structure Theory text !!
-        linestrength= 2.0*l2*linesum*linesum
+    if(angularNumber1==angularNumber2+1.0) then
+        linestrength= 2.0*(angularNumber2+1)*linesum*linesum         !! Prefactor of 2 !!
+    else if(angularNumber1==angularNumber2-1.0) then                             !! Expressions here from Atomic Structure Theory text !!
+        linestrength= 2.0*angularNumber2*linesum*linesum
     end if
 
     Ediff=abs(E1-E2)                                                           !! Energy difference between levels in au !!
@@ -219,18 +209,18 @@
     wavelen=wavelen*(10.0**(10))                                               !! Converting to angstroms !!
     print *, 'Radiation wavelength (Angstroms) =', wavelen
 
-    if(pn1>pn2) then                    !! Assigning stat weights based on the order they were entered above !!
-        g2=(2.0)*(2.0*l1+1.0)           !! These commands ensure that data can be entered in any order !!
-        g1=(2.0)*(2.0*l2+1.0)           !! Upper level denoted by g2, lower denoted by g1 !!
-    else if(pn1<pn2) then
-        g2=(2.0)*(2.0*l2+1.0)
-        g1=(2.0)*(2.0*l1+1.0)
-    else if(pn1==pn2 .and. l2>l1) then
-        g2=(2.0)*(2.0*l2+1.0)
-        g1=(2.0)*(2.0*l1+1.0)
-    else if(pn1==pn2 .and.l2<l1) then
-        g2=(2.0)*(2.0*l1+1.0)
-        g1=(2.0)*(2.0*l2+1.0)
+    if(principalNumber1>principalNumber2) then                    !! Assigning stat weights based on the order they were entered above !!
+        g2=(2.0)*(2.0*angularNumber1+1.0)           !! These commands ensure that data can be entered in any order !!
+        g1=(2.0)*(2.0*angularNumber2+1.0)           !! Upper level denoted by g2, lower denoted by g1 !!
+    else if(principalNumber1<principalNumber2) then
+        g2=(2.0)*(2.0*angularNumber2+1.0)
+        g1=(2.0)*(2.0*angularNumber1+1.0)
+    else if(principalNumber1==principalNumber2 .and. angularNumber2>angularNumber1) then
+        g2=(2.0)*(2.0*angularNumber2+1.0)
+        g1=(2.0)*(2.0*angularNumber1+1.0)
+    else if(principalNumber1==principalNumber2 .and.angularNumber2<angularNumber1) then
+        g2=(2.0)*(2.0*angularNumber1+1.0)
+        g1=(2.0)*(2.0*angularNumber2+1.0)
     end if
 
     if(E1>E2) then
@@ -249,9 +239,8 @@
     print *, 'A_ki values (s^-1): A21 =', A21
     print *, ' '
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! FORMATTING & OUTPUT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 500 continue
 
     deallocate(r)
@@ -260,7 +249,7 @@
         allocate(r(0:Ncol), radial1(0:Ncol), radial2(0:Ncol))
         r(0)=0.0
         do i=0, Ncol
-            r(i)=real(i,8)*h
+            r(i)=real(i,8)*deltaR
         end do
         do i=0, N1
             radial1(i)=ut(i)
@@ -275,7 +264,7 @@
         allocate(r(0:Ncol), radial1(0:Ncol), radial2(0:Ncol))
         r(0)=0.0
         do i=0, Ncol
-            r(i)=real(i,8)*h
+            r(i)=real(i,8)*deltaR
         end do
         do i=0, N2
             radial1(i)=ut(i)
@@ -299,14 +288,14 @@
     open(unit=20, file='STRUCTURE.OUT')
         write(20,*) ' '
         write(20,*) '-----CONFIGURATIONS & ENERGIES-----'
-        write(20,1005) 'Atomic number of ion Z = ', int(Z)
+        write(20,1005) 'Atomic number of ion Z = ', int(atomicNumber)
         write(20,1001) 'n', 'l', 'Energy'
-        write(20,1002) int(pn1), int(l1), E1
-        write(20,1002) int(pn2), int(l2), E2
+        write(20,1002) int(principalNumber1), int(angularNumber1), E1
+        write(20,1002) int(principalNumber2), int(angularNumber2), E2
         write(20,*) ' '
         write(20,*) '-----NUMERICAL GRID-----'
         write(20,1003) 'Number of grid points:', Ncol !The greatest number
-        write(20,*) 'Grid step size:', h
+        write(20,*) 'Grid step size:', deltaR
         write(20,*) ' '
         write(20,*) '-----TRANSITION CALCULATIONS-----'
         if(traflag==0) then
@@ -323,11 +312,11 @@
     close(20)
 
     open(unit=30, file='COLLDATA.INP') ! File of input data to be used with collision code
-        write(30,*) pn1, l1, E1
-        write(30,*) pn2, l2, E2
+        write(30,*) principalNumber1, angularNumber1, E1
+        write(30,*) principalNumber2, angularNumber2, E2
         write(30,*) f12
         write(30,*) Ncol
-        write(30,*) h
+        write(30,*) deltaR
     close(30)
 
 1000 format(1x, a, 1x, f3.1, 1x, a, 1x, f3.1, 1x, a, 1x, f15.7, /)
@@ -337,4 +326,4 @@
 1004 format(/, 1x, a, /)
 1005 format(1x, a, i2)
 
-    end program atom
+    end program hydrogenicAtomIon

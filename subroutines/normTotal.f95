@@ -1,30 +1,23 @@
-subroutine normtotal(inflex, N, h, u1, u2, ut)
+subroutine normTotal(inflectionPoint, totalNumPoints, deltaR, firstVector, secondVector, totalVector)
     use variablesMod, only : real_prec
+    implicit none
 
-    integer, intent(in) :: inflex, N
+    integer, intent(in) :: inflectionPoint, totalNumPoints
+    real(kind = real_prec), intent(in) :: deltaR, firstVector(0: totalNumPoints), secondVector(0: totalNumPoints)
+    real(kind = real_prec), intent(inout) :: totalVector(0: totalNumPoints)
+
+    ! Local variables
     integer :: i
-    real(kind = real_prec), intent(in) :: h, u1(0: N), u2(0: N)
-    real(kind = real_prec), intent(inout) :: ut(0: N)
-    real(kind = real_prec) :: norm, area
-    
-    do i = 0, inflex
-        ut(i) = u1(i)
+    real(kind = real_prec) :: normalisationConstant, areaUnderCurve
+
+    totalVector(0: inflectionPoint) = firstVector(0: inflectionPoint)
+    totalVector(inflectionPoint + 1: totalNumPoints) = secondVector(inflectionPoint + 1: totalNumPoints)
+
+    areaUnderCurve = 0.0
+    do i = 0, totalNumPoints - 1
+        areaUnderCurve = areaUnderCurve + 0.5 * deltaR * ((totalVector(i) ** 2) + (totalVector(i + 1) ** 2))
     end do
 
-    do i = inflex + 1, N
-        ut(i) = u2(i)
-    end do
-
-    area = 0.0
-
-    do i = 0, N - 1
-        area = area + 0.5 * h * ((ut(i) ** 2) + (ut(i+1) ** 2))
-    end do
-
-    norm = 1.0 / sqrt(area)
-
-    print *, 'Area = ', area
-    print *, 'Normalisation constant = ', norm
-    
-    ut = ut * norm
+    normalisationConstant = 1.0 / sqrt(areaUnderCurve)
+    totalVector = totalVector * normalisationConstant
 end subroutine normtotal

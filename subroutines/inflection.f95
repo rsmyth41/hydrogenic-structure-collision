@@ -1,25 +1,23 @@
-subroutine inflection(a, N, inflex)
+subroutine inflection(potentialVector, totalNumPoints, inflectionPoint)
     use variablesMod, only : real_prec
+    implicit none
 
-    real(kind = real_prec), intent(in) :: a(0: N)
-    integer, intent(in) :: N
-    integer, intent(out) :: inflex
+    integer, intent(in) :: totalNumPoints
+    integer, intent(out) :: inflectionPoint
+    real(kind = real_prec), intent(in) :: potentialVector(0: totalNumPoints)
+
+    ! Local variables
     integer :: i
+    real(kind = real_prec) :: checkSignChange
 
-    do i = N - 1, 0, -1
-        if (a(i) * a(i + 1) == 0.0) then
-            inflex = i
-            goto 1
-        end if
-
-        if (a(i) *a (i + 1) < 0.0) then
-            inflex = i
-            goto 1
+    do i = totalNumPoints - 1, 0, -1
+        checkSignChange = potentialVector(i) * potentialVector(i + 1)
+        if (checkSignChange == 0.0 .or. checkSignChange < 0.0) then
+            inflectionPoint = i
+            return
         end if
     end do
 
     !! setting condition in case point of inflection cannot be determined due to low E !!
-    inflex = -1 
-
-1   continue
+    inflectionPoint = -1
 end subroutine inflection

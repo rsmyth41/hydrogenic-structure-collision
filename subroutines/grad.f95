@@ -1,38 +1,45 @@
-subroutine grad(inflex, N, u1, u2, r, flag, grad1, grad2, h, E)
+subroutine grad(inflectionPoint, totalNumPoints, firstVector, secondVector, radialGrid, convergenceFlag, deltaR, levelEnergy)
     use variablesMod, only : real_prec
+    implicit none
 
-    integer, intent(in) :: inflex, N
-    real(kind = real_prec), intent(inout) :: E
-    real(kind = real_prec), intent(in) :: u1(0: N), u2(0: N), r(0: N), h
-    real(kind = real_prec) ::  sum1, sum2, totalSum
-    real(kind = real_prec), intent(out) :: grad1, grad2
-    integer, intent(out) :: flag
+    integer, intent(in) :: inflectionPoint, totalNumPoints
+    integer, intent(out) :: convergenceFlag
+    real(kind = real_prec), intent(inout) :: levelEnergy
+    real(kind = real_prec), intent(in) :: firstVector(0: totalNumPoints), secondVector(0: totalNumPoints)
+    real(kind = real_prec), intent(in) :: radialGrid(0: totalNumPoints), deltaR
 
-    grad1 = (u1(inflex - 1) - u1(inflex))/(r(inflex - 1) - r(inflex))
-    grad2 = (u2(inflex + 1) - u2(inflex))/(r(inflex + 1) - r(inflex))
-    
-    flag = 0
+    ! Local variables
+    integer :: i
+    real(kind = real_prec) :: outwardSum, inwardSum, totalSum
+    real(kind = real_prec) :: gradient1, gradient2, gradientDifference
+    real(kind = real_prec) :: convergenceCondition = 1.0E-9
 
-    !! setting a small condition of 10**-10 !!
-    if (abs(grad1 - grad2) < 0.000000001) then
-        flag = 1
-    elseif (abs(grad1 - grad2) > 0.000000001) then
-        flag = 0
+    gradient1 = (firstVector(inflectionPoint - 1) - firstVector(inflectionPoint)) &
+            / (radialGrid(inflectionPoint - 1)- radialGrid(inflectionPoint))
+    gradient2 = (secondVector(inflectionPoint + 1) - secondVector(inflectionPoint)) &
+            / (radialGrid(inflectionPoint + 1) - radialGrid(inflectionPoint))
+    gradientDifference = abs(gradient1 - gradient2)
+
+    convergenceFlag = 0
+    if (gradientDifference < convergenceCondition) then
+        convergenceFlag = 1
+    elseif (gradientDifference > convergenceCondition) then
+        convergenceFlag = 0
     end if
 
-    sum1 = 0
-    sum2 = 0
-    totalSum = 0
-    if (flag == 0) then
-        do i = 0, inflex
-            sum1 = sum1 + 0.5 * h * ((u1(i) ** 2) + (u1(i + 1) ** 2))
+    if (convergenceFlag == 0) then
+        outwardSum = 0
+        inwardSum = 0
+        totalSum = 0
+        do i = 0, inflectionPoint
+            outwardSum = outwardSum + 0.5 * deltaR * ((firstVector(i) ** 2) + (firstVector(i + 1) ** 2))
         end do
-        do i = inflex, N - 1
-            sum2 = sum2 + 0.5 * h * ((u2(i) ** 2) + (u2(i + 1) ** 2))
+        do i = totalNumPoints - 1, inflectionPoint, -1
+            inwardSum = inwardSum + 0.5 * deltaR * ((secondVector(i) ** 2) + (secondVector(i + 1) ** 2))
         end do
-        totalSum = sum1 + sum2
+        totalSum = outwardSum + inwardSum
+
         !! Approx from Atomic structure theory text !!
-        E = E + ((grad1 - grad2) * u1(inflex)) / (2 * totalSum)
+        levelEnergy = levelEnergy + ((gradient1 - gradient2) * firstVector(inflectionPoint)) / (2.0 * totalSum)
     end if
-
 end subroutine grad

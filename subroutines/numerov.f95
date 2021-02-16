@@ -1,26 +1,31 @@
-subroutine numerov(h, inflex, N, a, u1, u2)
+subroutine numerov(deltaR, inflectionPoint, totalNumPoints, potentialVector, firstVector, secondVector)
     use variablesMod, only : real_prec, int_prec
+    implicit none
 
-    integer, intent(in) :: inflex, N
-    real(kind = real_prec), intent(in) :: h, a(0: N)
-    real(kind = real_prec), intent(inout) :: u1(0: N), u2(0: N)
-    real(kind = real_prec) :: c1, c2, numerator, denominator
+    integer, intent(in) :: inflectionPoint, totalNumPoints
+    real(kind = real_prec), intent(in) :: deltaR, potentialVector(0: totalNumPoints)
+    real(kind = real_prec), intent(inout) :: firstVector(0: totalNumPoints), secondVector(0: totalNumPoints)
+
+    ! Local variables
     integer :: i
+    real(kind = real_prec) :: constant1, constant2, numerator, denominator
 
-    c1 = 5.0 * (h * h / 6.0)
-    c2 = h * h/ 12.0
+    constant1 = 5.0 * (deltaR * deltaR / 6.0)
+    constant2 = deltaR * deltaR / 12.0
 
-    ! Forward integration
-    do i = 1, inflex + 1   
-        numerator = ((2.0 - c1 * a(i)) * u1(i) - (1.0 + c2 *a (i - 1)) * u1(i - 1))
-        denominator = (1.0 + c2 * a(i + 1))
-        u1(i + 1) = numerator / denominator
+    ! Outwards integration
+    do i = 1, inflectionPoint + 1
+        numerator = ((2.0 - constant1 * potentialVector(i)) * firstVector(i) - &
+                (1.0 + constant2 * potentialVector(i - 1)) * firstVector(i - 1))
+        denominator = (1.0 + constant2 * potentialVector(i + 1))
+        firstVector(i + 1) = numerator / denominator
     end do
 
-    ! Backwards integration
-    do i = N, inflex - 1, -1 
-        numerator = ((2.0 - c1 * a(i - 1)) * u2(i - 1)-(1.0+  c2 * a(i)) * u2(i))
-        denominator = (1.0 + c2 * a(i - 2))
-        u2(i - 2) = numerator / denominator
+    ! Inwards integration
+    do i = totalNumPoints, inflectionPoint - 1, -1
+        numerator = ((2.0 - constant1 * potentialVector(i - 1)) * secondVector(i - 1) - &
+                (1.0 + constant2 * potentialVector(i)) * secondVector(i))
+        denominator = (1.0 + constant2 * potentialVector(i - 2))
+        secondVector(i - 2) = numerator / denominator
     end do
 end subroutine numerov
