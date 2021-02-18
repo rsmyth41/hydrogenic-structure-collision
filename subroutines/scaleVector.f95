@@ -1,4 +1,4 @@
-subroutine scalevector(totalNumPoints, inflectionPoint, firstVector, secondVector)
+subroutine scaleVector(totalNumPoints, inflectionPoint, firstVector, secondVector)
     use variablesMod, only : real_prec
     implicit none
 
@@ -17,4 +17,4 @@ subroutine scalevector(totalNumPoints, inflectionPoint, firstVector, secondVecto
 
     constant = numerator / denominator
     secondVector(inflectionPoint - 2: totalNumPoints) = secondVector(inflectionPoint - 2: totalNumPoints) * constant
-end subroutine scalevector
+end subroutine scaleVector

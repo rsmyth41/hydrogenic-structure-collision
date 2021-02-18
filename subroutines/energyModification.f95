@@ -1,4 +1,6 @@
-subroutine grad(inflectionPoint, totalNumPoints, firstVector, secondVector, radialGrid, convergenceFlag, deltaR, levelEnergy)
+subroutine energyModification(inflectionPoint, totalNumPoints, firstVector, secondVector, &
+        radialGrid, convergenceFlag, deltaR, levelEnergy)
+
     use variablesMod, only : real_prec
     implicit none
 
@@ -10,9 +12,9 @@ subroutine grad(inflectionPoint, totalNumPoints, firstVector, secondVector, radi
 
     ! Local variables
     integer :: i
+    real(kind = real_prec), parameter :: convergenceCondition = 1.0E-9
     real(kind = real_prec) :: outwardSum, inwardSum, totalSum
     real(kind = real_prec) :: gradient1, gradient2, gradientDifference
-    real(kind = real_prec) :: convergenceCondition = 1.0E-9
 
     gradient1 = (firstVector(inflectionPoint - 1) - firstVector(inflectionPoint)) &
             / (radialGrid(inflectionPoint - 1)- radialGrid(inflectionPoint))
@@ -42,4 +44,4 @@ subroutine grad(inflectionPoint, totalNumPoints, firstVector, secondVector, radi
         !! Approx from Atomic structure theory text !!
         levelEnergy = levelEnergy + ((gradient1 - gradient2) * firstVector(inflectionPoint)) / (2.0 * totalSum)
     end if
-end subroutine grad
+end subroutine energyModification

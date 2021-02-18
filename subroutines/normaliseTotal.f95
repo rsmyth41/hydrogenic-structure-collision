@@ -1,4 +1,4 @@
-subroutine normTotal(inflectionPoint, totalNumPoints, deltaR, firstVector, secondVector, totalVector)
+subroutine normaliseTotal(inflectionPoint, totalNumPoints, deltaR, firstVector, secondVector, totalVector)
     use variablesMod, only : real_prec
     implicit none
 
@@ -20,4 +20,4 @@ subroutine normTotal(inflectionPoint, totalNumPoints, deltaR, firstVector, secon
 
     normalisationConstant = 1.0 / sqrt(areaUnderCurve)
     totalVector = totalVector * normalisationConstant
-end subroutine normtotal
+end subroutine normaliseTotal

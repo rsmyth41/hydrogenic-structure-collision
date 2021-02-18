@@ -35,24 +35,24 @@
 
     N1 = real(rmax1 / deltaR)
 
-    allocate(r(0: N1))
-    allocate(v(0: N1))
+    allocate(radialGrid(0: N1))
+    allocate(potentialVector(0: N1))
     allocate(a1(0: N1))
     allocate(u1(0: N1))
     allocate(u2(0: N1))
     allocate(ut(0: N1))
 
     do i = 1, N1
-        r(i) = real(i, 8) * deltaR
-        v(i) = (-1.0 * atomicNumber) / r(i)
+        radialGrid(i) = real(i, 8) * deltaR
+        potentialVector(i) = (-1.0 * atomicNumber) / radialGrid(i)
     end do
     print *, ' '
 
-    ! Large close the origin
-    v(0) = -100000000.0
+    ! Large repulsive potential close the origin
+    potentialVector(0) = -100000000.0
 
-    ! Initial position
-    r(0) = 0.0
+    ! Initial grid position
+    radialGrid(0) = 0.0
 
     ! Zero at the origin
     u1(0) = 0.0
@@ -72,45 +72,45 @@
     ! Here we return from the node section of the code
 2   continue 
 
-    !! Calculates ARRAY ELEMENTS of a !!
+    !! Calculates array elements of the numerov vector !!
     do i = 1, N1
-        a1(i) = 2.0 * (Ein1 - v(i)) - (angularNumber1 * (angularNumber1 + 1.0)) / (r(i) * r(i))
+        a1(i) = 2.0 * (Ein1 - potentialVector(i)) - (angularNumber1 * (angularNumber1 + 1.0)) / (radialGrid(i) * radialGrid(i))
     end do
 
-    !! Calculates INFLECTION POINT from LHS !!
-    call inflection(a1, N1, inflex1)
+    !! Calculates inflection point from LHS !!
+    call determineInflection(a1, N1, inflex1)
     if (inflex1 == -1 .or. inflex1 == N1) then
         Ein1 = Ein1 * 10.0
         goto 2
     end if
 
-    !! Uses NUMEROV METHOD !!
-    call numerov(deltaR, inflex1, N1, a1, u1, u2)
+    !! Uses numerov method !!
+    call numerovMethod(deltaR, inflex1, N1, a1, u1, u2)
 
-    !! RESCALING of u2(i) to connect with u1(i) !!
-    call scalevector(N1, inflex1, u1, u2)
+    !! Rescaling of u2(i) to connect with u1(i) !!
+    call scaleVector(N1, inflex1, u1, u2)
 
-    !! COUNTS NODES in our plot and SHIFTS INITITAL ENERGY !!
+    !! Counts nodes in our plot and shifts initial energy !!
     nodecount = 0
     call nodeChecker(nodecount, nodecountflag, inflex1, u1, u2, nodes1, Ein1, N1)
 
     if (nodecountflag == 1) goto 2
 
-    !! CALCULATING GRADIENTS and MODIFYING ENERGY !!
-    call grad(inflex1, N1, u1, u2, r, flag, deltaR, Ein1)
+    !! Calculates gradients and modifies energy !!
+    call energyModification(inflex1, N1, u1, u2, radialGrid, flag, deltaR, Ein1)
     if (flag == 0) goto 2
 
-    !! Constructing and normalising new TOTAL VECTOR ut(i) !!
-    call normtotal(inflex1, N1, deltaR, u1, u2, ut)
+    !! Constructing and normalising new total vector ut(i) !!
+    call normaliseTotal(inflex1, N1, deltaR, u1, u2, ut)
 
-    print *, 'Inflection point is at', r(inflex1)
+    print *, 'Inflection point is at', radialGrid(inflex1)
     !! Energy output in Ryd rel to lowest !!
     print 1000, 'Energy of n =', principalNumber1, 'l =', angularNumber1, 'config is', Ein1
     E1 = Ein1
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! SECOND CONFIGURATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    deallocate(r,v)
+    deallocate(radialGrid, potentialVector)
 
     rmax2 = ((3.0 * principalNumber2 * principalNumber2 - angularNumber2 * (angularNumber2 + 1.0))) * 4.0 / atomicNumber
     nodes2 = real(principalNumber2 - 1 - angularNumber2)
@@ -118,21 +118,21 @@
     N2 = real(rmax2 / deltaR)
     E = Ein2
 
-    allocate(r(0: N2))
-    allocate(v(0: N2))
+    allocate(radialGrid(0: N2))
+    allocate(potentialVector(0: N2))
     allocate(a2(0: N2))
     allocate(w1(0: N2))
     allocate(w2(0: N2))
     allocate(wt(0: N2))
 
     do i = 1, N2
-        r(i) = real(i, 8) * deltaR
-        v(i) = (-1.0 * atomicNumber) / r(i)
+        radialGrid(i) = real(i, 8) * deltaR
+        potentialVector(i) = (-1.0 * atomicNumber) / radialGrid(i)
     end do
     print *, ' '
 
-    v(0) = -100000000.0            ! Large close the origin
-    r(0) = 0.0                     ! Initial position
+    potentialVector(0) = -100000000.0       ! Large close the origin
+    radialGrid(0) = 0.0                     ! Initial position
     w1(0) = 0.0
     w1(1) = 0.000001
     w2(N2) = 0.0
@@ -142,32 +142,32 @@
 4   continue
 
     do i = 1, N2
-        a2(i) = 2.0 * (E - v(i)) - (angularNumber2 * (angularNumber2 + 1.0)) / (r(i) * r(i))
+        a2(i) = 2.0 * (E - potentialVector(i)) - (angularNumber2 * (angularNumber2 + 1.0)) / (radialGrid(i) * radialGrid(i))
     end do
 
-    call inflection(a2, N2, inflex2)
+    call determineInflection(a2, N2, inflex2)
     if(inflex2==-1 .or. inflex2==N) then
         E=E*10.0
     goto 4
     end if
-    call numerov(deltaR, inflex2, N2, a2, w1, w2)
+
+    call numerovMethod(deltaR, inflex2, N2, a2, w1, w2)
+
+    call scaleVector(N2, inflex2, w1, w2)
 
     nodecount = 0
     call nodeChecker(nodecount, nodecountflag, inflex2, w1, w2, nodes2, E, N2)
 
     if (nodecountflag == 1) goto 4
-    if (nodecountflag == -1) goto 5
-5   continue
 
-    call scalevector(N2, inflex2, w1, w2)
-
-    call grad(inflex2, N2, w1, w2, r, flag, deltaR, E)
+    call energyModification(inflex2, N2, w1, w2, radialGrid, flag, deltaR, E)
     if (flag == 0) goto 4
   
-    call normtotal(inflex2, N2, deltaR, w1, w2, wt)
+    call normaliseTotal(inflex2, N2, deltaR, w1, w2, wt)
 
-    print *, 'Inflection point is at', r(inflex2)
-    print 1000, 'Energy of n=', principalNumber2, 'l=', angularNumber2, 'config is', E  !! Energy output in Ryd rel to lowest !!
+    print *, 'Inflection point is at', radialGrid(inflex2)
+    !! Energy output in Ryd rel to lowest !!
+    print 1000, 'Energy of n=', principalNumber2, 'l=', angularNumber2, 'config is', E
     E2=E
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!! TRANSITIONS & A VALUES !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -178,11 +178,11 @@
         N = N1                    !! OF THE "SMALLEST" RADIAL FUNCTION i.e. TO ENSURE WE DONT       !!
     end if                      !! EXCEED THE LIMIT OF THE ARRAY                                  !!
 
-    deallocate(r)
-    allocate(r(0: N))
-    r(0) = 0.0
+    deallocate(radialGrid)
+    allocate(radialGrid(0: N))
+    radialGrid(0) = 0.0
     do i = 1, N
-        r(i) = real(i, 8) * deltaR
+        radialGrid(i) = real(i, 8) * deltaR
     end do
 
     if(abs(angularNumber1 - angularNumber2) > 1.0 .or. angularNumber1 - angularNumber2 == 0.0) then
@@ -193,7 +193,7 @@
 
     linesum=0.0
     do i=0, N-1
-        linesum= linesum + 0.5*deltaR*((ut(i)*wt(i)*r(i)) + (ut(i+1)*wt(i+1)*r(i+1)))       !! E1 transition matrix element !!
+        linesum= linesum + 0.5*deltaR*((ut(i)*wt(i)*radialGrid(i)) + (ut(i+1)*wt(i+1)*radialGrid(i+1)))       !! E1 transition matrix element !!
     end do
     if(angularNumber1==angularNumber2+1.0) then
         linestrength= 2.0*(angularNumber2+1)*linesum*linesum         !! Prefactor of 2 !!
@@ -243,13 +243,13 @@
 
 500 continue
 
-    deallocate(r)
+    deallocate(radialGrid)
     if(N1<N2) then
         Ncol=N2
-        allocate(r(0:Ncol), radial1(0:Ncol), radial2(0:Ncol))
-        r(0)=0.0
+        allocate(radialGrid(0:Ncol), radial1(0:Ncol), radial2(0:Ncol))
+        radialGrid(0)=0.0
         do i=0, Ncol
-            r(i)=real(i,8)*deltaR
+            radialGrid(i)=real(i,8)*deltaR
         end do
         do i=0, N1
             radial1(i)=ut(i)
@@ -261,10 +261,10 @@
         end do
     else if(N1>N2) then
         Ncol=N1
-        allocate(r(0:Ncol), radial1(0:Ncol), radial2(0:Ncol))
-        r(0)=0.0
+        allocate(radialGrid(0:Ncol), radial1(0:Ncol), radial2(0:Ncol))
+        radialGrid(0)=0.0
         do i=0, Ncol
-            r(i)=real(i,8)*deltaR
+            radialGrid(i)=real(i,8)*deltaR
         end do
         do i=0, N2
             radial1(i)=ut(i)
@@ -279,8 +279,8 @@
     open(unit=51, file='RADIAL1.DAT')
     open(unit=52, file='RADIAL2.DAT')
     do i=0, Ncol
-        write(51,*) r(i), radial1(i)
-        write(52,*) r(i), radial2(i)
+        write(51,*) radialGrid(i), radial1(i)
+        write(52,*) radialGrid(i), radial2(i)
     end do
     close(51)
     close(52)

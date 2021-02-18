@@ -11,7 +11,6 @@ subroutine nodeChecker(nodeCount, nodeCountFlag, inflectionPoint, firstVector, s
     integer :: i
 
     nodeCountFlag = 0
-
     do i = 0, inflectionPoint
         if (firstVector(i) * firstVector(i + 1) < 0) then
             nodeCount = nodeCount + 1
@@ -35,5 +34,4 @@ subroutine nodeChecker(nodeCount, nodeCountFlag, inflectionPoint, firstVector, s
     end if
 
     nodeCountFlag = 1
-
 end subroutine nodeChecker

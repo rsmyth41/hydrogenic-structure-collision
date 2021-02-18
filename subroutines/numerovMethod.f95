@@ -1,9 +1,9 @@
-subroutine numerov(deltaR, inflectionPoint, totalNumPoints, potentialVector, firstVector, secondVector)
+subroutine numerovMethod(deltaR, inflectionPoint, totalNumPoints, numerovVector, firstVector, secondVector)
     use variablesMod, only : real_prec, int_prec
     implicit none
 
     integer, intent(in) :: inflectionPoint, totalNumPoints
-    real(kind = real_prec), intent(in) :: deltaR, potentialVector(0: totalNumPoints)
+    real(kind = real_prec), intent(in) :: deltaR, numerovVector(0: totalNumPoints)
     real(kind = real_prec), intent(inout) :: firstVector(0: totalNumPoints), secondVector(0: totalNumPoints)
 
     ! Local variables
@@ -15,17 +15,17 @@ subroutine numerov(deltaR, inflectionPoint, totalNumPoints, potentialVector, fir
 
     ! Outwards integration
     do i = 1, inflectionPoint + 1
-        numerator = ((2.0 - constant1 * potentialVector(i)) * firstVector(i) - &
-                (1.0 + constant2 * potentialVector(i - 1)) * firstVector(i - 1))
-        denominator = (1.0 + constant2 * potentialVector(i + 1))
+        numerator = ((2.0 - constant1 * numerovVector(i)) * firstVector(i) - &
+                (1.0 + constant2 * numerovVector(i - 1)) * firstVector(i - 1))
+        denominator = (1.0 + constant2 * numerovVector(i + 1))
         firstVector(i + 1) = numerator / denominator
     end do
 
     ! Inwards integration
     do i = totalNumPoints, inflectionPoint - 1, -1
-        numerator = ((2.0 - constant1 * potentialVector(i - 1)) * secondVector(i - 1) - &
-                (1.0 + constant2 * potentialVector(i)) * secondVector(i))
-        denominator = (1.0 + constant2 * potentialVector(i - 2))
+        numerator = ((2.0 - constant1 * numerovVector(i - 1)) * secondVector(i - 1) - &
+                (1.0 + constant2 * numerovVector(i)) * secondVector(i))
+        denominator = (1.0 + constant2 * numerovVector(i - 2))
         secondVector(i - 2) = numerator / denominator
     end do
-end subroutine numerov
+end subroutine numerovMethod

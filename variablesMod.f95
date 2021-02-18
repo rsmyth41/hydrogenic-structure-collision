@@ -1,5 +1,8 @@
 module variablesMod
+    ! Integer variable precision :: Int*8
     integer, parameter :: int_prec = selected_int_kind(8)
+
+    ! Real variable precision :: Real*8
     integer, parameter :: real_prec = selected_real_kind(8)
 
     ! Number of grid steps
@@ -14,11 +17,11 @@ module variablesMod
     ! Minimum radius
     real(kind = real_prec), parameter :: rmin=0.0
 
-    !Stepsize for calculations
-    real(kind = real_prec) :: deltaR = 0.005
+    ! Stepsize for calculations
+    real(kind = real_prec), parameter :: deltaR = 0.005
 
     ! Vector of positions and potential
-    real(kind = real_prec), allocatable :: r(:), v(:)
+    real(kind = real_prec), allocatable :: radialGrid(:), potentialVector(:)
 
     ! Vector of Numerov variable
     real(kind = real_prec), allocatable :: a1(:), a2(:)
