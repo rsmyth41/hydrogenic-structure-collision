@@ -1,19 +1,20 @@
-subroutine scalevector(N, inflex, u1, u2)
-    integer, intent(in) :: inflex, N
-    real*8, intent(in) :: u1(0: N)
-    real*8, intent(inout) :: u2(0: N)
-    real*8 :: scale, x, y
+subroutine scaleVector(totalNumPoints, inflectionPoint, firstVector, secondVector)
+    use variablesMod, only : real_prec
+    implicit none
 
-    x = u1(inflex)
-    y = u2(inflex)
+    integer, intent(in) :: inflectionPoint, totalNumPoints
+    real(kind = real_prec), intent(in) :: firstVector(0: totalNumPoints)
+    real(kind = real_prec), intent(inout) :: secondVector(0: totalNumPoints)
 
-    if (y == 0) then
-        y = 1.0E-37
-    end if
+    ! Local variables
+    integer :: i
+    real(kind = real_prec) :: constant, numerator, denominator
 
-    scale = x / y
+    numerator = firstVector(inflectionPoint)
+    denominator = secondVector(inflectionPoint)
 
-    do i = N, inflex - 2, -1
-        u2(i) = u2(i) * scale
-    end do
-end subroutine scalevector
+    if (denominator == 0) denominator = 1.0E-37
+
+    constant = numerator / denominator
+    secondVector(inflectionPoint - 2: totalNumPoints) = secondVector(inflectionPoint - 2: totalNumPoints) * constant
+end subroutine scaleVector
