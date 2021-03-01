@@ -1,5 +1,6 @@
 module subroutinesMod
-    contains 
+    contains
+    include 'dataInput.f95'
     include 'energyModification.f95'
     include 'determineInflection.f95'
     include 'normaliseTotal.f95'
